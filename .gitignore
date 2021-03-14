@@ -1,0 +1,12 @@
+# Add any directories, files, or patterns you don't want to be tracked by version control
+v15
+.vs
+bin
+Logs
+MbpsStore.db
+obj
+RadiologyImages
+ClerkingFiles
+.vscode
+Properties
+Obfuscator_Output
