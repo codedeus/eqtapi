@@ -21,10 +21,6 @@ namespace equipment_lease_api.Entities.Configurations
             builder.Property(e => e.AssetCurrentStatus).HasMaxLength(20).IsUnicode(false);
             builder.Property(e => e.ProjectSiteId).IsRequired(true).HasMaxLength(256).IsUnicode(false);
 
-
-            //builder.Property(e => e.LocationId).IsRequired(true).HasMaxLength(256).IsUnicode(false);
-            //builder.Property(e => e.ProjectId).IsRequired(true).HasMaxLength(256).IsUnicode(false);
-
             builder
                 .HasOne(b => b.CreatedBy)
                 .WithMany(a => a.AssetLeaseEntries)
@@ -35,21 +31,15 @@ namespace equipment_lease_api.Entities.Configurations
                 .WithMany(a => a.AssetLeaseEntries)
                 .OnDelete(DeleteBehavior.NoAction);
 
-            //builder
-            //    .HasOne(b => b.Location)
-            //    .WithMany(a => a.AssetLeaseEntries)
-            //    .OnDelete(DeleteBehavior.NoAction);
+            builder
+                .HasOne(b => b.AssetItem)
+                .WithMany(a => a.AssetLeaseEntries)
+                .OnDelete(DeleteBehavior.NoAction);
 
-            //builder
-            //    .HasOne(b => b.Project)
-            //    .WithMany(a => a.AssetLeaseEntries)
-            //    .OnDelete(DeleteBehavior.NoAction);
-
-            //builder.HasOne(e => e.AssetItem)
-            //    .WithMany(e => e.AssetLeaseEntries)
-            //    .HasForeignKey(e => e.AssetItemId)
-            //    .HasPrincipalKey(d => d.Id)
-            //    .OnDelete(DeleteBehavior.NoAction);
+            builder
+                .HasOne(b => b.AssetLease)
+                .WithMany(a => a.AssetLeaseEntries)
+                .OnDelete(DeleteBehavior.NoAction);
         }
     }
 }

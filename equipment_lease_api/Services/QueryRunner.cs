@@ -94,8 +94,6 @@ namespace equipment_lease_api.Services
             {
                 var projects = dbContext.Projects
                     .Where(s => (subsidiaryId == null || s.SubsidiaryId == subsidiaryId) && (locationId == null || s.LocationId == locationId) && s.IsDeleted == false)
-                    .Include(s => s.Location)
-                    .Include(s => s.Subsidiary)
                     .Select(s => new ProjectDTO
                     {
                         Description = s.Description,
@@ -105,18 +103,29 @@ namespace equipment_lease_api.Services
                         Subsidiary = s.Subsidiary.Name,
                         SubsidiaryId = s.SubsidiaryId,
                         Name = s.Name,
-                        Code = s.Code
+                        Code = s.Code,
+                        ProjectSites = s.ProjectSites.Where(s => s.IsDeleted == false)
+                                    .Select(s => new ProjectSiteDTO
+                                    {
+                                        Id = s.Id,
+                                        SiteName = s.Name,
+                                        SiteCode = s.Code,
+                                        Project = s.Project.Name,
+                                        ProjectId = s.ProjectId
+                                    }).ToList()
                     }).OrderBy(d => d.Name).AsQueryable();
+
+                int totalCount = projects.Count();
 
                 if (limit == 0)
                 {
-                    limit = projects.Count();
+                    limit = totalCount == 0 ? 10 : totalCount;
                 }
 
                 var res = new ProjectResult
                 {
                     Projects = projects.Skip(skip).Take(limit).ToList(),
-                    TotalCount = projects.Count()
+                    TotalCount = totalCount
                 };
                 return res;
             }
@@ -125,7 +134,7 @@ namespace equipment_lease_api.Services
         {
             using (var dbContext = new AppDataContext())
             {
-                var projects = dbContext.Projects.Where(s => s.SubsidiaryId == subsidiaryId && s.IsDeleted == false).Include(s => s.Location).Include(s => s.Subsidiary)
+                var projects = dbContext.Projects.Where(s => s.SubsidiaryId == subsidiaryId && s.IsDeleted == false)
                     .Select(s => new ProjectDTO
                     {
                         Description = s.Description,
@@ -429,7 +438,6 @@ namespace equipment_lease_api.Services
                 || s.Code.ToLower().Contains(searchText)
                 || s.RegistrationNumber.ToLower().Contains(searchText)
                 || s.SerialNumber.ToLower().Contains(searchText)))
-                    //.Include(s => s.AssetGroup)
                     .Select(s => new AssetItemDTO
                     {
                         SerialNumber = s.SerialNumber,
@@ -584,7 +592,7 @@ namespace equipment_lease_api.Services
         {
             using (var dbContex = new AppDataContext())
             {
-                var assetGroups = dbContex.AssetGroups.Where(s => s.IsDeleted == false && s.ParentGroupId == null).Include(d => d.ParentGroup).Select(s => new AssetGroupDTO
+                var assetGroups = dbContex.AssetGroups.Where(s => s.IsDeleted == false && s.ParentGroupId == null).Select(s => new AssetGroupDTO
                 {
                     Id = s.Id,
                     Name = s.Name,
@@ -627,7 +635,7 @@ namespace equipment_lease_api.Services
         {
             using (var dbContex = new AppDataContext())
             {
-                var assetGroups = dbContex.AssetGroups.Where(s => s.IsDeleted == false && s.ParentGroupId == parentId).Include(d => d.ParentGroup).Select(s => new AssetGroupDTO
+                var assetGroups = dbContex.AssetGroups.Where(s => s.IsDeleted == false && s.ParentGroupId == parentId).Select(s => new AssetGroupDTO
                 {
                     Id = s.Id,
                     Name = s.Name,
@@ -1709,10 +1717,8 @@ namespace equipment_lease_api.Services
                         Id = newData.Id,
                         SiteCode = newData.Name,
                         SiteName = newData.Code,
-                        Project = affectedProject.Name,
                         ProjectId = affectedProject.Id,
-                        Subsidiary = affectedProject.Subsidiary.Name,
-                        SubsidiaryId = affectedProject.SubsidiaryId
+                        Project = affectedProject.Name
                     };
                 }
                 return null;
@@ -1724,16 +1730,13 @@ namespace equipment_lease_api.Services
             {
                 var projectSites = dbContex.ProjectSites
                     .Where(s => s.IsDeleted == false && (projectId == null || s.ProjectId == projectId))
-                    .Include(s => s.Project)
                     .Select(s => new ProjectSiteDTO
                     {
                         Id = s.Id,
                         SiteName = s.Name,
                         SiteCode = s.Code,
-                        Project = s.Project.Name,
                         ProjectId = s.ProjectId,
-                        Subsidiary = s.Project.Subsidiary.Name,
-                        SubsidiaryId = s.Project.SubsidiaryId
+                        Project = s.Project.Name
                     }).ToList();
                 return projectSites;
             }
@@ -1767,17 +1770,15 @@ namespace equipment_lease_api.Services
                     affectedData.ProjectId = data.ProjectId;
                     dbContext.SaveChanges();
 
-                    var updatedRecord = dbContext.ProjectSites.Where(a => a.Id == data.Id && a.IsDeleted == false).Include(s => s.Project).Include(s => s.Project.Subsidiary).FirstOrDefault(); ;
+                    var updatedRecord = dbContext.ProjectSites.Where(a => a.Id == data.Id && a.IsDeleted == false).FirstOrDefault();
 
                     return new ProjectSiteDTO
                     {
                         Id = updatedRecord.Id,
-                        Project = updatedRecord.Project.Name,
                         ProjectId = updatedRecord.ProjectId,
                         SiteCode = updatedRecord.Code,
                         SiteName = updatedRecord.Name,
-                        SubsidiaryId = updatedRecord.Project.SubsidiaryId,
-                        Subsidiary = updatedRecord.Project.Subsidiary.Name
+                        Project = updatedRecord.Project.Name
                     };
                 }
                 return null;

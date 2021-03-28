@@ -10,6 +10,8 @@ namespace equipment_lease_api.DTO
         public string Id { get; set; }
         public string SubsidiaryId { get; set; }
         public string ProjectId { get; set; }
+        public string LeaseNumber { get; set; }
+        public DateTime LeaseDate { get; set; }
         //public string LocationId { get; set; }
         //public string ProjectSiteId { get; set; }
         public List<AssetLeaseItem> AssetList { get; set; }
@@ -25,11 +27,10 @@ namespace equipment_lease_api.DTO
 
         //public string LocationId { get; set; }
         public string ProjectSiteId { get; set; }
-        public string Name { get; set; }
-        public string Brand { get; set; }
-        public string Code { get; set; }
-        public string Number { get; set; }
-        public string AssetGroupId { get; set; }
-        public string AssetGroup { get; set; }
+        public string AssetName { get; set; }
+        public string AssetBrand { get; set; }
+        public string AssetCode { get; set; }
+        public string SerialNumber { get; set; }
+        public string ProjectSite { get; set; }
     }
 }

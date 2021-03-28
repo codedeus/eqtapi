@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 
 namespace equipment_lease_api.Entities
 {
-    public class AssetLeaseEntryUpdate
+    public class AssetLeaseUpdateEntry
     {
         public string Id { get; set; }
         public string CreatedById { get; set; }
@@ -14,13 +14,16 @@ namespace equipment_lease_api.Entities
         public DateTime CreationDate { get; set; }
         public string AssetStatus { get; set; }
         public DateTime UpdateDate { get; set; }
-        public bool InvoiceRaised { get; set; }
-        public string LeaseInvoiceId { get; set; }
+        public DateTime? DateDeleted { get; set; }
+        public DateTime LastModifiedDate { get; set; }
+        public string LastModifiedById { get; set; }
+        public AppUser LastModifiedBy { get; set; }
         public string Comment { get; set; }
         public string AssetLeaseEntryId { get; set; }
+        public string AssetLeaseUpdateId { get; set; }
+        public AssetLeaseUpdate AssetLeaseUpdate { get; set; }
         public AssetLeaseEntry AssetLeaseEntry { get; set; }
         public AppUser CreatedBy { get; set; }
         public AppUser DeletedBy { get; set; }
-        public LeaseInvoice LeaseInvoice { get; set; }
     }
 }

@@ -1,4 +1,5 @@
-﻿using System;
+﻿using equipment_lease_api.Entities;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -36,6 +37,7 @@ namespace equipment_lease_api.DTO
         public string Code { get; set; }
         public string Description { get; set; }
         public string Id { get; set; }
+        public ICollection<ProjectSiteDTO> ProjectSites { get; set; }
     }
 
     public class ProjectResult

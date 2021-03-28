@@ -45,7 +45,5 @@ namespace equipment_lease_api
                 })
                 .UseNLog()  // NLog: setup NLog for Dependency injection
                 .Build();
-
-
     }
 }

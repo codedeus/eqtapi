@@ -14,11 +14,11 @@ namespace equipment_lease_api.Entities
         public string DeletedById { get; set; }
         public DateTime CreationDate { get; set; }
         public string LeaseNumber { get; set; }
-
         public string ProjectId { get; set; }
         public Project Project { get; set; }
         public AppUser CreatedBy { get; set; }
         public AppUser DeletedBy { get; set; }
         public ICollection<AssetLeaseEntry> AssetLeaseEntries { get; set; }
+        public ICollection<AssetLeaseUpdate> AssetLeaseUpdates { get; set; }
     }
 }

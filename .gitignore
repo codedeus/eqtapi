@@ -3,10 +3,7 @@ v15
 .vs
 bin
 Logs
-MbpsStore.db
 obj
-RadiologyImages
-ClerkingFiles
 .vscode
 Properties
 Obfuscator_Output

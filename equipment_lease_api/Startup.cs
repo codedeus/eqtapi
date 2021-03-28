@@ -5,6 +5,7 @@ using equipment_lease_api.Auth;
 using equipment_lease_api.Entities;
 using equipment_lease_api.Helpers;
 using equipment_lease_api.Interfaces;
+using equipment_lease_api.Middleware;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
@@ -173,7 +174,6 @@ namespace equipment_lease_api
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
         {
-
             if (env.IsDevelopment())
             {
                 app.UseDeveloperExceptionPage();
@@ -190,8 +190,8 @@ namespace equipment_lease_api
                 c.SwaggerEndpoint("v1/swagger.json", "My API V1");
             });
 
-
             app.UseCors("CorsPolicy");
+            app.UseMiddleware<ErrorHandlerMiddleware>();
 
             app.UseRouting();
             app.UseAuthentication();

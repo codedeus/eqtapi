@@ -16,7 +16,7 @@ namespace equipment_lease_api.Controllers
     public class AssetLeaseController : BaseController
     {
         [HttpPost("new")]
-        public ActionResult CreateLeaseOrder([FromBody]AssetLeaseDTO assetLeaseDTO)
+        public ActionResult CreateLeaseOrder([FromBody] AssetLeaseDTO assetLeaseDTO)
         {
             return Ok(LeaseQuery.CreateNewAssetLease(assetLeaseDTO, GetUserId()));
         }
@@ -24,7 +24,7 @@ namespace equipment_lease_api.Controllers
         [HttpGet("{id}/edit")]
         public ActionResult GetLeaseDetails(string id)
         {
-            return Ok(LeaseQuery.GetAssetsForEdit(id));
+            return Ok(LeaseQuery.GetAssetLeaseEntries(id));
         }
 
         [HttpGet("search")]
@@ -32,5 +32,12 @@ namespace equipment_lease_api.Controllers
         {
             return Ok(LeaseQuery.SearchForLeaseNumbers(searchText));
         }
+
+        [HttpPost("update")]
+        public ActionResult UpdateAssetLease([FromBody] AssetLeaseDTO assetLeaseDTO)
+        {
+            return Ok(LeaseQuery.UpdateAssetLease(assetLeaseDTO, GetUserId()));
+        }
+
     }
 }

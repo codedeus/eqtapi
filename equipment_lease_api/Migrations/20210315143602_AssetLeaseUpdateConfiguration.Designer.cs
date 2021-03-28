@@ -3,15 +3,17 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using equipment_lease_api.Entities;
 
 namespace equipment_lease_api.Migrations
 {
     [DbContext(typeof(AppDataContext))]
-    partial class AppDataContextModelSnapshot : ModelSnapshot
+    [Migration("20210315143602_AssetLeaseUpdateConfiguration")]
+    partial class AssetLeaseUpdateConfiguration
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -883,14 +885,6 @@ namespace equipment_lease_api.Migrations
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("bit");
 
-                    b.Property<string>("LastModifiedById")
-                        .HasColumnType("varchar(256)")
-                        .HasMaxLength(256)
-                        .IsUnicode(false);
-
-                    b.Property<DateTime>("LastModifiedDate")
-                        .HasColumnType("datetime2");
-
                     b.Property<DateTime>("UpdateDate")
                         .HasColumnType("datetime2");
 
@@ -903,8 +897,6 @@ namespace equipment_lease_api.Migrations
                     b.HasIndex("CreatedById");
 
                     b.HasIndex("DeletedById");
-
-                    b.HasIndex("LastModifiedById");
 
                     b.ToTable("AssetLeaseUpdateEntries");
                 });
@@ -1702,10 +1694,6 @@ namespace equipment_lease_api.Migrations
                     b.HasOne("equipment_lease_api.Entities.AppUser", "DeletedBy")
                         .WithMany()
                         .HasForeignKey("DeletedById");
-
-                    b.HasOne("equipment_lease_api.Entities.AppUser", "LastModifiedBy")
-                        .WithMany()
-                        .HasForeignKey("LastModifiedById");
                 });
 
             modelBuilder.Entity("equipment_lease_api.Entities.AssetModel", b =>

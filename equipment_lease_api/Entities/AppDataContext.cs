@@ -26,7 +26,7 @@ namespace equipment_lease_api.Entities
         public virtual DbSet<AssetLease> AssetLeases { get; set; }
         public virtual DbSet<AssetLeaseEntry> AssetLeaseEntries { get; set; }
         public virtual DbSet<AssetGroup> AssetGroups { get; set; }
-        public virtual DbSet<AssetLeaseEntryUpdate> AssetLeaseEntryUpdates { get; set; }
+        public virtual DbSet<AssetLeaseUpdateEntry> AssetLeaseUpdateEntries { get; set; }
         public virtual DbSet<LeaseInvoice> LeaseInvoices { get; set; }
         public virtual DbSet<AssetType> AssetTypes { get; set; }
         public virtual DbSet<AssetBrand> AssetBrands { get; set; }
@@ -37,6 +37,7 @@ namespace equipment_lease_api.Entities
         public virtual DbSet<AssetModel> AssetModels { get; set; }
         public virtual DbSet<EngineModel> EngineModels { get; set; }
         public virtual DbSet<EngineType> EngineTypes { get; set; }
+        public virtual DbSet<AssetLeaseUpdate> AssetLeaseUpdates { get; set; }
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
             if (!optionsBuilder.IsConfigured)
@@ -72,6 +73,7 @@ namespace equipment_lease_api.Entities
             modelBuilder.ApplyConfiguration(new AssetDimensionConfiguration());
             modelBuilder.ApplyConfiguration(new EngineTypeConfiguration());
             modelBuilder.ApplyConfiguration(new EngineModelConfiguration());
+            modelBuilder.ApplyConfiguration(new AssetLeaseUpdateConfiguration());
             //modelBuilder.Entity<Invoice>().HasOne(a => a.Customer)
             //              .WithMany(au => au.Invoices)
             //              .HasForeignKey(a => a.CustomerId)

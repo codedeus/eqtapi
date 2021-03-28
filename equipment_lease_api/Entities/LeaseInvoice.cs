@@ -13,11 +13,13 @@ namespace equipment_lease_api.Entities
         public string DeletedById { get; set; }
         public DateTime LeaseStartDate { get; set; }
         public DateTime LeaseEndDate { get; set; }
-        public string LeaseId { get; set; }
+        public string AssetLeaseId { get; set; }
         public DateTime CreationDate { get; set; }
+        public DateTime? DateDeleted { get; set; }
         public string InvoiceNumber { get; set; }
         public decimal TotalAmount { get; set; }
         public AppUser CreatedBy { get; set; }
-        public ICollection<AssetLeaseEntryUpdate> AssetLeaseEntryUpdates { get; set; }
+        public AssetLease AssetLease { get; set; }
+        public ICollection<AssetLeaseUpdate> AssetLeaseUpdates { get; set; }
     }
 }

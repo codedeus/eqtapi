@@ -26,10 +26,21 @@ namespace equipment_lease_api.Entities.Configurations
                 .OnDelete(DeleteBehavior.NoAction)
                 .HasForeignKey(e => e.AssetLeaseId);
 
+            builder.HasMany(e => e.AssetLeaseUpdates)
+                .WithOne(e => e.AssetLease)
+                .HasPrincipalKey(e => e.Id)
+                .OnDelete(DeleteBehavior.NoAction)
+                .HasForeignKey(e => e.AssetLeaseId);
+
             builder
                 .HasOne(b => b.Project)
                 .WithMany(a => a.AssetLeases)
                 .OnDelete(DeleteBehavior.NoAction);
+
+            //builder
+            //    .HasOne(b => b.CreatedBy)
+            //    .WithMany(a => a.AssetLeases)
+            //    .OnDelete(DeleteBehavior.NoAction);
         }
     }
 }

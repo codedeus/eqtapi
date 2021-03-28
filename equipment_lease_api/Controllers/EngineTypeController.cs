@@ -1,5 +1,6 @@
 ﻿using equipment_lease_api.DTO;
 using equipment_lease_api.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using System;
@@ -11,6 +12,7 @@ namespace equipment_lease_api.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
+    [Authorize]
     public class EngineTypeController : BaseController
     {
         [HttpPost]
