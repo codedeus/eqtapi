@@ -11,9 +11,20 @@ namespace equipment_lease_api.Models
         public string AssetStatus { get; set; }
     }
 
+    public class LeaseUpdateDetails
+    {
+        public string Project { get; set; }
+        public string Location { get; set; }
+        public string Subsidiary { get; set; }
+        public string LeaseNumber { get; set; }
+        public string AssetLeaseId { get; set; }
+        public DateTime ExpectedLeaseOutDate => Entries.OrderBy(d => d.ExpectedLeaseOutDate).Select(d => d.ExpectedLeaseOutDate).FirstOrDefault();
+        public List<LeaseEntryUpdateRequest> Entries { get; set; }
+    }
+
     public class LeaseEntryUpdateRequest
     {
-        public string Id { get; set; }
+        public string AssetLeaseEntryId { get; set; }
         public string AssetGroup { get; set; }
         public string AssetSubGroup { get; set; }
         public string Description { get; set; }
@@ -27,12 +38,28 @@ namespace equipment_lease_api.Models
         public string EngineSerialNumber { get; set; }
         public string FunctionalStatus { get; set; }
         public string Remark { get; set; }
+        internal DateTime ExpectedLeaseOutDate { get; set; }
     }
 
     public class LeaseUpdateRequest
     {
         public List<LeaseEntryUpdateRequest> Entries { get; set; }
-        public string Id { get; set; }
+        public string AssetLeaseId { get; set; }
         public DateTime UpdateDate { get; set; }
+    }
+
+    public class LeaseUpdateExcelUpload
+    {
+        public List<ExcelUpdateEntry> Entries { get; set; }
+        public string AssetLeaseId { get; set; }
+        public DateTime UpdateDate { get; set; }
+    }
+
+    public class ExcelUpdateEntry
+    {
+        public string AssetCode { get; set; }
+        public string FunctionalStatus { get; set; }
+        public string Remark { get; set; }
+        public string ErrorComment { get; set; }
     }
 }

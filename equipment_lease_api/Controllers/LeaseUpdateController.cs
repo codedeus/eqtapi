@@ -24,8 +24,15 @@ namespace equipment_lease_api.Controllers
         [HttpPost("leases/{leaseId}/updates")]
         public ActionResult CreateLeaseUpdate([FromBody] LeaseUpdateRequest leaseUpdate, string leaseId)
         {
-            leaseUpdate.Id = leaseId;
+            leaseUpdate.AssetLeaseId = leaseId;
             return Ok(LeaseUpdateQuery.CreateLeaseUpdate(leaseUpdate,GetUserId()));
+        }
+
+        [HttpPost("leases/{leaseId}/excel-updates")]
+        public ActionResult AssetLeaseExcelUpdate([FromBody] LeaseUpdateExcelUpload leaseUpdate, string leaseId)
+        {
+            leaseUpdate.AssetLeaseId = leaseId;
+            return Ok(LeaseUpdateQuery.AssetLeaseExcelUpdate(leaseUpdate, GetUserId()));
         }
 
         [HttpGet("leases/{leaseId}")]

@@ -30,6 +30,7 @@ namespace equipment_lease_api.DTO
         public int? ManufactureYear { get; set; }
         public int? AcquisitionYear { get; set; }
         public string CurrentLocationId { get; set; }
+        public bool IsAvailable { get; set; }
         public string Remark { get; set; }
     }
 
@@ -73,6 +74,7 @@ namespace equipment_lease_api.DTO
         public int? AcquisitionYear { get; set; }
         public string CurrentLocationId { get; set; }
         public string CurrentLocation { get; set; }
+        public bool IsAvailable { get; set; }
         public string Remark { get; set; }
     }
 

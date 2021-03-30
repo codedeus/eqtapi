@@ -16,7 +16,7 @@ namespace equipment_lease_api.Entities.Configurations
             builder.Property(e => e.CreatedById).IsRequired(true).HasMaxLength(256).IsUnicode(false);
             builder.Property(e => e.AssetStatus).IsRequired(true).HasMaxLength(20).IsUnicode(false);
             builder.Property(e => e.LastModifiedById).IsRequired(false).HasMaxLength(256).IsUnicode(false);
-            builder.Property(e => e.Comment).IsRequired(true).HasMaxLength(1000).IsUnicode(false);
+            builder.Property(e => e.Comment).IsRequired(false).HasMaxLength(1000).IsUnicode(false);
             builder.Property(e => e.DeletedById).HasMaxLength(256).IsUnicode(false);
             builder.Property(e => e.AssetLeaseEntryId).HasMaxLength(256).IsUnicode(false);
 

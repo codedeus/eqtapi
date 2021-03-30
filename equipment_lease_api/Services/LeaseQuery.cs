@@ -170,7 +170,7 @@ namespace equipment_lease_api.Services
                             affectedEntry.ProjectSiteId = entry.ProjectSiteId;
 
                             //if new leaseout date is greate
-                            if (previousLeaseOutDate.Date > entry.ExpectedLeaseOutDate.Date && entry.ExpectedLeaseOutDate.Date > today.Date)
+                            if (previousLeaseOutDate.Date > entry.ExpectedLeaseOutDate.Date && entry.ExpectedLeaseOutDate.Date < today.Date)
                             {
                                 var numOfDaysDiff = (previousLeaseOutDate.Date - entry.ExpectedLeaseOutDate.Date).Days;
                                 while (numOfDaysDiff > 0)
@@ -225,6 +225,7 @@ namespace equipment_lease_api.Services
 
                             else if(entry.ExpectedLeaseOutDate.Date > previousLeaseOutDate.Date)
                             {
+                                //how do we delete all updates if no asset update entry belongs to that date after the expected lease update are adjusted????
                                 var affectedUpdates = dbContext.AssetLeaseUpdateEntries.Where(aup => aup.AssetLeaseEntryId == affectedEntry.Id && aup.IsDeleted == false && aup.UpdateDate.Date < entry.ExpectedLeaseOutDate.Date).ToList();
                                 if (affectedUpdates.Count > 0)
                                 {

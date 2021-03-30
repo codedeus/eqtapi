@@ -1,4 +1,7 @@
 ﻿
+using System;
+using System.Collections.Generic;
+
 namespace equipment_lease_api.Helpers
 {
     public static class Constants
@@ -14,6 +17,15 @@ namespace equipment_lease_api.Helpers
             {
                 public const string ApiAccess = "api_access";
             }
+
+
+            public readonly static Dictionary<string, string> AssetUpdateStatuses = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
+                {
+                    {"Operational", "Operational"},
+                    {"Broken Down", "Broken Down"},
+                    {"Sunk", "Sunk"},
+                    {"Returned", "Returned"}
+                };
 
             public static class AssetStatus
             {

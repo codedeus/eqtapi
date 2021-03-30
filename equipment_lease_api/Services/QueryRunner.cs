@@ -78,7 +78,7 @@ namespace equipment_lease_api.Services
                     Code = s.Code
                 }).AsQueryable();
                 int totalSize = subsidiaries.Count();
-                limit = limit == 0 ? totalSize : limit;
+                limit = limit == 0 ? (totalSize == 0 ? 10 : totalSize) : limit;
 
                 var res = new LocationResult
                 {
@@ -248,7 +248,8 @@ namespace equipment_lease_api.Services
                     LeaseCost = assetItem.LeaseCost,
                     ManufactureYear = assetItem.ManufactureYear,
                     RegistrationNumber = assetItem.RegistrationNumber,
-                    Remark = assetItem.Remark
+                    Remark = assetItem.Remark,
+                    IsAvailable = assetItem.IsAvailable
                 };
             }
         }
@@ -311,11 +312,12 @@ namespace equipment_lease_api.Services
                         EngineType = s.EngineType.Name,
                         ManufactureYear = s.ManufactureYear,
                         RegistrationNumber = s.RegistrationNumber,
-                        Remark = s.Remark
+                        Remark = s.Remark,
+                        IsAvailable = s.IsAvailable
                     }).OrderBy(d => d.Asset).AsQueryable();
 
                 int totalSize = assets.Count();
-                limit = limit == 0 ? 1000 : limit;
+                limit = limit == 0 ? (totalSize == 0 ? 10 : totalSize) : limit;
 
                 return new AssetListResult
                 {
@@ -336,7 +338,7 @@ namespace equipment_lease_api.Services
                     affectedAsset.SerialNumber = assetItem.SerialNumber;
                     affectedAsset.AssetSubGroupId = assetItem.AssetSubGroupId;
                     affectedAsset.AcquisitionYear = assetItem.AcquisitionYear;
-                    affectedAsset.CurrentStatus = assetItem.CurrentStatus;
+                    //affectedAsset.CurrentStatus = assetItem.CurrentStatus;
                     affectedAsset.AssetBrandId = assetItem.AssetBrandId;
                     affectedAsset.AssetGroupId = assetItem.AssetGroupId;
                     affectedAsset.AssetId = assetItem.AssetId;
@@ -369,7 +371,7 @@ namespace equipment_lease_api.Services
                 {
                     //return list of error messages for assets not found or assets that are currently leased out
                     var affectedAsset = dbContext.AssetItems.FirstOrDefault(a => a.Id == id && a.IsDeleted == false);
-                    if (affectedAsset != null && affectedAsset.CurrentStatus != AssetStatus.LEASED_OUT)
+                    if (affectedAsset != null && affectedAsset.IsAvailable /*affectedAsset.CurrentStatus != AssetStatus.LEASED_OUT*/)
                     {
                         affectedAsset.IsDeleted = true;
                         affectedAsset.DeletedById = loggedInUser;
@@ -457,7 +459,10 @@ namespace equipment_lease_api.Services
                         DimensionId = s.DimensionId,
                         EngineModelId = s.EngineModelId,
                         EngineTypeId = s.EngineTypeId,
-                        AssetName = s.Asset.Name
+                        AssetName = s.Asset.Name,
+                        IsAvailable = s.IsAvailable,
+                        RegistrationNumber = s.RegistrationNumber
+
                     }).ToList();
                 return items;
             }
@@ -604,7 +609,7 @@ namespace equipment_lease_api.Services
                     IsSubGroup = s.ParentGroupId != null
                 }).AsQueryable();
                 int totalSize = assetGroups.Count();
-                limit = limit == 0 ? totalSize : limit;
+                limit = limit == 0 ? (totalSize == 0 ? 10 : totalSize) : limit;
 
                 var res = new AssetGroupResult
                 {
@@ -1111,7 +1116,7 @@ namespace equipment_lease_api.Services
                     Code = s.Code
                 }).AsQueryable();
                 int totalSize = assetTypes.Count();
-                limit = limit == 0 ? totalSize : limit;
+                limit = limit == 0 ? (totalSize == 0 ? 10 : totalSize) : limit;
 
                 var res = new AssetTypeResult
                 {
@@ -1188,7 +1193,7 @@ namespace equipment_lease_api.Services
                     Code = s.Code
                 }).AsQueryable();
                 int totalSize = assetBrands.Count();
-                limit = limit == 0 ? totalSize : limit;
+                limit = limit == 0 ? (totalSize == 0 ? 10 : totalSize) : limit;
 
                 var res = new AssetBrandResult
                 {
@@ -1265,7 +1270,7 @@ namespace equipment_lease_api.Services
                     Code = s.Code
                 }).OrderBy(d => d.Name).AsQueryable();
                 int totalSize = assets.Count();
-                limit = limit == 0 ? totalSize : limit;
+                limit = limit == 0 ? (totalSize == 0 ? 10 : totalSize) : limit;
 
                 var res = new AssetResult
                 {
@@ -1342,7 +1347,7 @@ namespace equipment_lease_api.Services
                     Code = s.Code
                 }).AsQueryable();
                 int totalSize = assetCapacities.Count();
-                limit = limit == 0 ? totalSize : limit;
+                limit = limit == 0 ? (totalSize == 0 ? 10 : totalSize) : limit;
 
                 var res = new AssetDataConfig
                 {
@@ -1419,7 +1424,7 @@ namespace equipment_lease_api.Services
                     Code = s.Code
                 }).AsQueryable();
                 int totalSize = assetDimensions.Count();
-                limit = limit == 0 ? totalSize : limit;
+                limit = limit == 0 ? (totalSize == 0 ? 10 : totalSize) : limit;
 
                 var res = new AssetDataConfig
                 {
@@ -1496,7 +1501,7 @@ namespace equipment_lease_api.Services
                     Code = s.Code
                 }).AsQueryable();
                 int totalSize = assetModels.Count();
-                limit = limit == 0 ? totalSize : limit;
+                limit = limit == 0 ? (totalSize == 0 ? 10 : totalSize) : limit;
 
                 var res = new AssetDataConfig
                 {
@@ -1573,7 +1578,7 @@ namespace equipment_lease_api.Services
                     Code = s.Code
                 }).AsQueryable();
                 int totalSize = engineModels.Count();
-                limit = limit == 0 ? totalSize : limit;
+                limit = limit == 0 ? (totalSize == 0 ? 10 : totalSize) : limit;
 
                 var res = new AssetDataConfig
                 {
@@ -1650,7 +1655,7 @@ namespace equipment_lease_api.Services
                     Code = s.Code
                 }).AsQueryable();
                 int totalSize = engineTypes.Count();
-                limit = limit == 0 ? totalSize : limit;
+                limit = limit == 0 ? (totalSize == 0 ? 10 : totalSize) : limit;
 
                 var res = new AssetDataConfig
                 {

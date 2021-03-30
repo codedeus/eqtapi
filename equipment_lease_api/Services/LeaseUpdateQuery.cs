@@ -2,8 +2,10 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using equipment_lease_api.DTO;
 using equipment_lease_api.Entities;
 using equipment_lease_api.Models;
+using Microsoft.EntityFrameworkCore;
 using static equipment_lease_api.Helpers.Constants.Strings;
 
 namespace equipment_lease_api.Services
@@ -79,14 +81,32 @@ namespace equipment_lease_api.Services
                     var affectedUpdateEntry = dbContext.AssetLeaseUpdateEntries.FirstOrDefault(ntr => ntr.Id == entry.Id && ntr.IsDeleted == false);
                     if (affectedUpdateEntry != null)
                     {
-                        affectedUpdateEntry.AssetStatus = entry.AssetStatus;
-                        affectedUpdateEntry.LastModifiedById = loggedInUser;
-                        affectedUpdateEntry.LastModifiedDate = today;
-                        //save a history of the edits
-                        success = true;
+                        var affectedAssetItem = dbContext.AssetItems.FirstOrDefault(d => d.Id == affectedUpdateEntry.AssetLeaseEntry.AssetItemId);
+                        if (affectedUpdateEntry.AssetStatus != AssetStatus.RETURNED || affectedAssetItem.IsAvailable)
+                        {
+                            affectedUpdateEntry.AssetStatus = entry.AssetStatus;
+                            affectedUpdateEntry.LastModifiedById = loggedInUser;
+                            affectedUpdateEntry.LastModifiedDate = today;
+
+                            var lastUpdateEntry = dbContext.AssetLeaseUpdateEntries.Where(d => d.IsDeleted == false && d.UpdateDate.Date >= affectedUpdateEntry.UpdateDate.Date && d.AssetLeaseEntryId == affectedUpdateEntry.AssetLeaseEntryId).OrderByDescending(d => d.UpdateDate).FirstOrDefault();
+                            if (lastUpdateEntry.Id == affectedUpdateEntry.Id)
+                            {
+                                var affectedLeaseEntry = dbContext.AssetLeaseEntries.FirstOrDefault(d => d.Id == affectedUpdateEntry.AssetLeaseEntryId);
+
+                                affectedLeaseEntry.AssetCurrentStatus = entry.AssetStatus;
+                                affectedAssetItem.CurrentStatus = entry.AssetStatus;
+                            }
+                            //save a history of the edits
+                            success = true;
+                        }
+
                     }
                 }
-                dbContext.SaveChanges();
+                if (success)
+                {
+                    dbContext.SaveChanges();
+                }
+                
                 return success;
             }
         }
@@ -97,17 +117,17 @@ namespace equipment_lease_api.Services
             {
                 var leaseDetails = (from assetLease in dbConctext.AssetLeases
                                     where assetLease.IsDeleted == false && assetLease.Id == leaseId
-                                    select new
+                                    select new LeaseUpdateDetails
                                     {
                                         Project = assetLease.Project.Name,
                                         Location = assetLease.Project.Location.Name,
                                         Subsidiary = assetLease.Project.Subsidiary.Name,
                                         LeaseNumber = assetLease.LeaseNumber,
-                                        assetLease.Id,
-                                        Entries = assetLease.AssetLeaseEntries.Where(s => s.IsDeleted == false && s.AssetCurrentStatus != AssetStatus.RETURNED)
+                                        AssetLeaseId = assetLease.Id,
+                                        Entries = assetLease.AssetLeaseEntries.Where(s => s.IsDeleted == false /*&& s.AssetCurrentStatus != AssetStatus.RETURNED*/)
                                             .Select(ntr => new LeaseEntryUpdateRequest
                                             {
-                                                Id = ntr.Id,
+                                                AssetLeaseEntryId = ntr.Id,
                                                 AssetGroup = ntr.AssetItem.AssetGroup.Name,
                                                 AssetSubGroup = ntr.AssetItem.AssetSubGroup.Name,
                                                 Description = ntr.AssetItem.Asset.Name,
@@ -118,7 +138,8 @@ namespace equipment_lease_api.Services
                                                 AssetCapacity = ntr.AssetItem.Capacity.Name,
                                                 AssetSerialNumber = ntr.AssetItem.SerialNumber,
                                                 EngineModel = ntr.AssetItem.EngineModel.Name,
-                                                EngineSerialNumber = ntr.AssetItem.EngineNumber
+                                                EngineSerialNumber = ntr.AssetItem.EngineNumber,
+                                                ExpectedLeaseOutDate = ntr.ExpectedLeaseOutDate
                                             }).ToList()
                                     }).FirstOrDefault();
                 return leaseDetails;
@@ -130,14 +151,16 @@ namespace equipment_lease_api.Services
             using(var dbContext = new AppDataContext())
             {
                 var today = DateTime.Now;
-                var previouslyUpdated = dbContext.AssetLeaseUpdates.FirstOrDefault(d => d.AssetLeaseId == leaseUpdate.Id && d.IsDeleted == false && d.UpdateDate.Date == leaseUpdate.UpdateDate.Date);
-                var lastLeaseUpdate = dbContext.AssetLeaseUpdates.Where(a => a.AssetLeaseId == leaseUpdate.Id && a.IsDeleted == false).OrderByDescending(d => d.UpdateDate).FirstOrDefault();
+                var previouslyUpdated = dbContext.AssetLeaseUpdates.FirstOrDefault(d => d.AssetLeaseId == leaseUpdate.AssetLeaseId && d.IsDeleted == false && d.UpdateDate.Date == leaseUpdate.UpdateDate.Date);
+                var lastLeaseUpdate = dbContext.AssetLeaseUpdates.Where(a => a.AssetLeaseId == leaseUpdate.AssetLeaseId && a.IsDeleted == false).OrderByDescending(d => d.UpdateDate).FirstOrDefault();
                 bool shouldUpdateAssetLeaseCurrentStatus = (lastLeaseUpdate != null && lastLeaseUpdate.UpdateDate <= leaseUpdate.UpdateDate) || lastLeaseUpdate == null;
+                //var affectedLease = dbContext.AssetLeases.FirstOrDefault(a=>a.Id == leaseUpdate.Id && a.IsDeleted==false)
+                
                 if (previouslyUpdated == null)
                 {
                     var newUpdate = new AssetLeaseUpdate
                     {
-                        AssetLeaseId = leaseUpdate.Id,
+                        AssetLeaseId = leaseUpdate.AssetLeaseId,
                         CreationDate = today,
                         IsDeleted = false,
                         CreatedById = loggedInUser,
@@ -148,7 +171,7 @@ namespace equipment_lease_api.Services
 
                     foreach (var entry in leaseUpdate.Entries)
                     {
-                        var affectedleaseEntry = dbContext.AssetLeaseEntries.FirstOrDefault(d => d.Id == entry.Id && d.IsDeleted == false && d.ExpectedLeaseOutDate.Date >= leaseUpdate.UpdateDate.Date);
+                        var affectedleaseEntry = dbContext.AssetLeaseEntries.FirstOrDefault(d => d.Id == entry.AssetLeaseEntryId && d.IsDeleted == false && d.ExpectedLeaseOutDate.Date <= leaseUpdate.UpdateDate.Date);
                         if (affectedleaseEntry != null)
                         {
                             var updateEntry = new AssetLeaseUpdateEntry
@@ -162,7 +185,7 @@ namespace equipment_lease_api.Services
                                 AssetLeaseUpdate = newUpdate,
                                 Comment = entry.Remark,
                                 UpdateDate = leaseUpdate.UpdateDate,
-                                AssetLeaseEntryId = entry.Id,
+                                AssetLeaseEntryId = entry.AssetLeaseEntryId,
                                 CreatedById = loggedInUser
                             };
 
@@ -171,6 +194,8 @@ namespace equipment_lease_api.Services
                             if (shouldUpdateAssetLeaseCurrentStatus)
                             {
                                 affectedleaseEntry.AssetCurrentStatus = entry.FunctionalStatus;
+                                var affectedAssetItem = dbContext.AssetItems.FirstOrDefault(d => d.Id == affectedleaseEntry.AssetItemId);
+                                affectedAssetItem.CurrentStatus = entry.FunctionalStatus;
                             }
                         }
                     }
@@ -181,19 +206,22 @@ namespace equipment_lease_api.Services
                 {
                     foreach(var entry in leaseUpdate.Entries)
                     {
-                        var affectedleaseEntry = dbContext.AssetLeaseEntries.FirstOrDefault(d => d.Id == entry.Id && d.IsDeleted == false && d.ExpectedLeaseOutDate.Date >= leaseUpdate.UpdateDate.Date);
+                        var affectedleaseEntry = dbContext.AssetLeaseEntries.FirstOrDefault(d => d.Id == entry.AssetLeaseEntryId && d.IsDeleted == false && d.ExpectedLeaseOutDate.Date <= leaseUpdate.UpdateDate.Date);
                         if (affectedleaseEntry != null)
                         {
-                            var affectedLeaseUpdateEntry = dbContext.AssetLeaseUpdateEntries.FirstOrDefault(d => d.AssetLeaseEntryId == entry.Id && d.IsDeleted == false && d.AssetLeaseUpdateId == previouslyUpdated.Id);
-                            if (affectedLeaseUpdateEntry != null)
+                            var affectedAssetItem = dbContext.AssetItems.FirstOrDefault(d => d.Id == affectedleaseEntry.AssetItemId);
+                            var affectedLeaseUpdateEntry = dbContext.AssetLeaseUpdateEntries.FirstOrDefault(d => d.AssetLeaseEntryId == entry.AssetLeaseEntryId && d.IsDeleted == false && d.AssetLeaseUpdateId == previouslyUpdated.Id);
+                            if (affectedLeaseUpdateEntry != null && (affectedLeaseUpdateEntry.AssetStatus != AssetStatus.RETURNED || affectedAssetItem.IsAvailable))
                             {
                                 affectedLeaseUpdateEntry.AssetStatus = entry.FunctionalStatus;
                                 affectedLeaseUpdateEntry.LastModifiedById = loggedInUser;
                                 affectedLeaseUpdateEntry.LastModifiedDate = today;
-
+                                affectedLeaseUpdateEntry.Comment = entry.Remark;
                                 if (shouldUpdateAssetLeaseCurrentStatus)
                                 {
                                     affectedleaseEntry.AssetCurrentStatus = entry.FunctionalStatus;
+
+                                    affectedAssetItem.CurrentStatus = entry.FunctionalStatus;
                                 }
                             }
                         }
@@ -203,5 +231,253 @@ namespace equipment_lease_api.Services
                 return true;
             }
         }
+
+        public static BatchUploadResponse AssetLeaseExcelUpdate(LeaseUpdateExcelUpload leaseUpdate, string loggedInUser)
+        {
+            using (var dbContext = new AppDataContext())
+            {
+                bool errorEncountered = false;
+                var today = DateTime.Now;
+                var previouslyUpdated = dbContext.AssetLeaseUpdates.FirstOrDefault(d => d.AssetLeaseId == leaseUpdate.AssetLeaseId && d.IsDeleted == false && d.UpdateDate.Date == leaseUpdate.UpdateDate.Date);
+                var lastLeaseUpdate = dbContext.AssetLeaseUpdates.Where(a => a.AssetLeaseId == leaseUpdate.AssetLeaseId && a.IsDeleted == false).OrderByDescending(d => d.UpdateDate).FirstOrDefault();
+                bool shouldUpdateAssetLeaseCurrentStatus = (lastLeaseUpdate != null && lastLeaseUpdate.UpdateDate <= leaseUpdate.UpdateDate) || lastLeaseUpdate == null;
+                //var affectedLease = dbContext.AssetLeases.FirstOrDefault(a=>a.Id == leaseUpdate.Id && a.IsDeleted==false)
+
+                if (previouslyUpdated == null)
+                {
+                    var newUpdate = new AssetLeaseUpdate
+                    {
+                        AssetLeaseId = leaseUpdate.AssetLeaseId,
+                        CreationDate = today,
+                        IsDeleted = false,
+                        CreatedById = loggedInUser,
+                        UpdateDate = leaseUpdate.UpdateDate,
+                        InvoiceRaised = false,
+                        LeaseInvoiceId = null
+                    };
+
+                    foreach (var entry in leaseUpdate.Entries)
+                    {
+                        entry.ErrorComment = "";
+                        var affectedAssetItem = dbContext.AssetItems.FirstOrDefault(s => s.Code == entry.AssetCode.Trim().ToLower() && s.IsDeleted == false);
+                        if (affectedAssetItem != null)
+                        {
+                            if (AssetUpdateStatuses.TryGetValue(entry.FunctionalStatus.Trim(), out string foundStatus))
+                            {
+                                var affectedleaseEntry = dbContext.AssetLeaseEntries.FirstOrDefault(d => d.AssetItemId == affectedAssetItem.Id && d.AssetLeaseId == leaseUpdate.AssetLeaseId && d.IsDeleted == false && d.ExpectedLeaseOutDate.Date <= leaseUpdate.UpdateDate.Date);
+                                if (affectedleaseEntry != null)
+                                {
+                                    var updateEntry = new AssetLeaseUpdateEntry
+                                    {
+                                        CreationDate = today,
+                                        IsDeleted = false,
+                                        AssetStatus = foundStatus,
+                                        DateDeleted = null,
+                                        DeletedById = null,
+                                        LastModifiedDate = today,
+                                        AssetLeaseUpdate = newUpdate,
+                                        Comment = entry.Remark,
+                                        UpdateDate = leaseUpdate.UpdateDate,
+                                        AssetLeaseEntryId = affectedleaseEntry.Id,
+                                        CreatedById = loggedInUser
+                                    };
+
+                                    dbContext.AssetLeaseUpdateEntries.Add(updateEntry);
+
+                                    if (shouldUpdateAssetLeaseCurrentStatus)
+                                    {
+                                        affectedleaseEntry.AssetCurrentStatus = entry.FunctionalStatus;
+                                        affectedAssetItem.CurrentStatus = entry.FunctionalStatus;
+                                    }
+                                }
+                            }
+                            else
+                            {
+                                errorEncountered = true;
+                                entry.ErrorComment += "Functional Status not valid";
+                            }
+                        }
+
+                        else
+                        {
+                            errorEncountered = true;
+                            entry.ErrorComment += "Asset Code not valid";
+                        }
+                    }
+                }
+                else
+                {
+                    foreach (var entry in leaseUpdate.Entries)
+                    {
+                        entry.ErrorComment = "";
+                        var affectedAssetItem = dbContext.AssetItems.FirstOrDefault(s => s.Code == entry.AssetCode.Trim().ToLower() && s.IsDeleted == false);
+                        if (affectedAssetItem != null)
+                        {
+                            var affectedleaseEntry = dbContext.AssetLeaseEntries.FirstOrDefault(d => d.AssetItemId == affectedAssetItem.Id && d.AssetLeaseId == leaseUpdate.AssetLeaseId && d.IsDeleted == false && d.ExpectedLeaseOutDate.Date <= leaseUpdate.UpdateDate.Date);
+                            if (affectedleaseEntry != null)
+                            {
+                                if (AssetUpdateStatuses.TryGetValue(entry.FunctionalStatus.Trim(), out string foundStatus))
+                                {
+                                    var affectedLeaseUpdateEntry = dbContext.AssetLeaseUpdateEntries.FirstOrDefault(d => d.AssetLeaseEntryId == affectedleaseEntry.Id && d.IsDeleted == false && d.AssetLeaseUpdateId == previouslyUpdated.Id);
+                                    if (affectedLeaseUpdateEntry != null && (affectedLeaseUpdateEntry.AssetStatus!= AssetStatus.RETURNED || affectedAssetItem.IsAvailable))
+                                    {
+                                        affectedLeaseUpdateEntry.AssetStatus = foundStatus;
+                                        affectedLeaseUpdateEntry.LastModifiedById = loggedInUser;
+                                        affectedLeaseUpdateEntry.LastModifiedDate = today;
+                                        affectedLeaseUpdateEntry.Comment = entry.Remark;
+
+                                        if (shouldUpdateAssetLeaseCurrentStatus)
+                                        {
+                                            affectedleaseEntry.AssetCurrentStatus = entry.FunctionalStatus;
+                                            affectedAssetItem.CurrentStatus = entry.FunctionalStatus;
+                                        }
+                                    }
+                                }
+                                else
+                                {
+                                    errorEncountered = true;
+                                    entry.ErrorComment += "Functional Status not valid";
+                                }
+                            }
+                        }
+                        else
+                        {
+                            errorEncountered = true;
+                            entry.ErrorComment += "Asset Code not valid";
+                        }
+                    }
+                }
+                if (!errorEncountered)
+                {
+                    dbContext.SaveChanges();
+                }
+                return new BatchUploadResponse
+                {
+                    ErrorList = errorEncountered ? leaseUpdate.Entries : null,
+                    IsSuccessful = !errorEncountered
+                };
+            }
+        }
+
+
+        #region RoutineUpdateLogic
+        //public static void RoutingUpdateCheck(string loggedInUser)
+        //{
+        //    using(var dbContext = new AppDataContext())
+        //    {
+        //        var pendingLeaseIds = dbContext.AssetLeases.Where(e => e.AssetLeaseEntries.Any(s => s.AssetCurrentStatus != AssetStatus.RETURNED) && e.IsDeleted == false)
+        //            .Select(s =>s.Id).ToList();
+        //        var today = DateTime.Now;
+
+        //        foreach(var leaseId in pendingLeaseIds)
+        //        {
+        //            var leaseEntries = dbContext.AssetLeaseEntries.Where(s => s.AssetLeaseId == leaseId && s.IsDeleted == false).Include(ntr => ntr.AssetLeaseUpdateEntries).ToList();
+        //            if (leaseEntries.Count > 0)
+        //            {
+        //                var exisitingUpdates = dbContext.AssetLeaseUpdates.Where(s => s.AssetLeaseId == leaseId && s.IsDeleted == false).Select(s => new { UpdateDate = s.UpdateDate.Date, s.Id }).ToList();
+        //                var exisitingUpdateDates = exisitingUpdates.Select(s => s.UpdateDate);
+        //                var leastLeaseOutDate = leaseEntries.OrderBy(d => d.ExpectedLeaseOutDate).Select(d => d.ExpectedLeaseOutDate).FirstOrDefault();
+
+        //                var startDate = leastLeaseOutDate.Date;
+        //                var endDate = DateTime.Now.Date;
+
+        //                var allDates = Enumerable.Range(0, (endDate - startDate).Days)
+        //                                         .Select(i => startDate.AddDays(i));
+
+        //                var missingDates = allDates.Except(exisitingUpdateDates);
+
+        //                foreach(var missingDate in missingDates)
+        //                {
+        //                    var assetUpdate = new AssetLeaseUpdate
+        //                    {
+        //                        AssetLeaseId = leaseId,
+        //                        CreationDate = today,
+        //                        IsDeleted = false,
+        //                        CreatedById = loggedInUser,
+        //                        UpdateDate = missingDate,
+        //                        InvoiceRaised = false,
+        //                        LeaseInvoiceId = null
+        //                    };
+
+        //                    foreach (var entry in leaseEntries)
+        //                    {
+        //                        //var affectedleaseEntry = dbContext.AssetLeaseEntries.FirstOrDefault(d => d.Id == entry.AssetLeaseEntryId && d.IsDeleted == false && d.ExpectedLeaseOutDate.Date <= leaseUpdate.UpdateDate.Date);
+        //                        if (entry.ExpectedLeaseOutDate.Date <= missingDate.Date)
+        //                        {
+        //                            var lastUpdateStatus = dbContext.AssetLeaseUpdateEntries.Where(s => s.AssetLeaseEntryId == entry.Id && s.IsDeleted == false && s.UpdateDate.Date <= missingDate.Date).OrderByDescending(d => d.UpdateDate).Select(s => s.AssetStatus).FirstOrDefault();
+        //                            var lastUpdate = dbContext.AssetLeaseUpdateEntries.Where(d => d.AssetLeaseEntryId == entry.Id && d.IsDeleted == false).OrderByDescending(d => d.UpdateDate).FirstOrDefault();
+        //                            var updateEntry = new AssetLeaseUpdateEntry
+        //                            {
+        //                                CreationDate = today,
+        //                                IsDeleted = false,
+        //                                AssetStatus = lastUpdateStatus ?? AssetStatus.OPERATIONAL,
+        //                                DateDeleted = null,
+        //                                DeletedById = null,
+        //                                LastModifiedDate = today,
+        //                                AssetLeaseUpdate = assetUpdate,
+        //                                Comment = lastUpdateStatus ?? AssetStatus.OPERATIONAL,
+        //                                UpdateDate = missingDate,
+        //                                AssetLeaseEntryId = entry.Id,
+        //                                CreatedById = loggedInUser
+        //                            };
+
+        //                            dbContext.AssetLeaseUpdateEntries.Add(updateEntry);
+
+        //                            if ((lastUpdate != null && lastUpdate.UpdateDate <= missingDate.Date) || lastUpdate == null)
+        //                            {
+        //                                entry.AssetCurrentStatus = lastUpdate != null && lastUpdate.AssetStatus != null ? lastUpdate.AssetStatus : lastUpdateStatus ?? AssetStatus.OPERATIONAL;
+        //                                var affectedAssetItem = dbContext.AssetItems.FirstOrDefault(s => s.Id == entry.AssetItemId);
+
+        //                                //also update the asset Item Status
+        //                                affectedAssetItem.CurrentStatus = lastUpdate != null && lastUpdate.AssetStatus != null ? lastUpdate.AssetStatus : lastUpdateStatus ?? AssetStatus.OPERATIONAL;
+        //                            }
+        //                        }
+        //                    }
+        //                }
+        //                //do the update here;
+
+        //                foreach(var existingUpdate in exisitingUpdates)
+        //                {
+        //                    var missingUpdateEntries = leaseEntries.Where(d => d.ExpectedLeaseOutDate.Date <= existingUpdate.UpdateDate.Date && !d.AssetLeaseUpdateEntries.Any(ntr => ntr.UpdateDate.Date == existingUpdate.UpdateDate.Date));
+        //                    foreach(var missingEntry in missingUpdateEntries)
+        //                    {
+        //                        var lastUpdateStatus = dbContext.AssetLeaseUpdateEntries.Where(s => s.AssetLeaseEntryId == missingEntry.Id && s.IsDeleted == false && s.UpdateDate.Date<= existingUpdate.UpdateDate.Date).OrderByDescending(d => d.UpdateDate).Select(s =>  s.AssetStatus).FirstOrDefault();
+        //                        var lastUpdate = dbContext.AssetLeaseUpdateEntries.Where(d => d.AssetLeaseEntryId == missingEntry.Id && d.IsDeleted == false).OrderByDescending(d => d.UpdateDate).FirstOrDefault();
+        //                        var updateEntry = new AssetLeaseUpdateEntry
+        //                        {
+        //                            CreationDate = today,
+        //                            IsDeleted = false,
+        //                            AssetStatus = lastUpdateStatus?? AssetStatus.OPERATIONAL,
+        //                            DateDeleted = null,
+        //                            DeletedById = null,
+        //                            LastModifiedDate = today,
+        //                            AssetLeaseUpdateId = existingUpdate.Id,
+        //                            Comment = lastUpdateStatus ?? AssetStatus.OPERATIONAL,
+        //                            UpdateDate = existingUpdate.UpdateDate,
+        //                            AssetLeaseEntryId = missingEntry.Id,
+        //                            CreatedById = loggedInUser
+        //                        };
+
+        //                        dbContext.AssetLeaseUpdateEntries.Add(updateEntry);
+
+        //                        if ((lastUpdate != null && lastUpdate.UpdateDate <= existingUpdate.UpdateDate.Date) || lastUpdate == null)
+        //                        {
+        //                            missingEntry.AssetCurrentStatus = lastUpdate != null && lastUpdate.AssetStatus != null ? lastUpdate.AssetStatus : lastUpdateStatus ?? AssetStatus.OPERATIONAL;
+        //                            var affectedAssetItem = dbContext.AssetItems.FirstOrDefault(s => s.Id == missingEntry.AssetItemId);
+
+        //                            //also update the asset Item Status
+        //                            affectedAssetItem.CurrentStatus = lastUpdate != null && lastUpdate.AssetStatus != null ? lastUpdate.AssetStatus : lastUpdateStatus ?? AssetStatus.OPERATIONAL;
+        //                        }
+        //                    }
+        //                }
+
+        //                //var missingUpdateEntries = dbContext.AssetLeaseUpdateEntries.Where(d => d.IsDeleted==false && leaseEntries.Any(ntr => ntr.Id == d.AssetLeaseEntryId ) && exisitingUpdateDates.Any(up => up.Date != d.UpdateDate.Date)).ToList();
+        //            }
+        //        }
+
+        //        dbContext.SaveChanges();
+        //    }
+        //}
+        #endregion
     }
 }

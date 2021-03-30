@@ -30,6 +30,7 @@ namespace equipment_lease_api.Controllers
         [HttpGet("search")]
         public ActionResult SearchForLeaseNumber(string searchText)
         {
+           
             return Ok(LeaseQuery.SearchForLeaseNumbers(searchText));
         }
 

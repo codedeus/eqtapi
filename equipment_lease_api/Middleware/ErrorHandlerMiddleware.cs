@@ -29,7 +29,8 @@ namespace equipment_lease_api.Middleware
             }
             catch (Exception error)
             {
-                _logger.LogError($"{error}");
+                var clientIP = context.Connection.RemoteIpAddress;
+                _logger.LogError($"IP = {clientIP}, Error = {error}");
                 await HandleExceptionAsync(context, error);
             }
         }

@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using static equipment_lease_api.Helpers.Constants.Strings;
 
 namespace equipment_lease_api.Entities
 {
@@ -21,6 +22,7 @@ namespace equipment_lease_api.Entities
         public string AssetGroupId { get; set; }
         public string AssetSubGroupId { get; set; }
         public string CurrentStatus { get; set; }
+        public bool IsAvailable => CurrentStatus == AssetStatus.AVAILABLE;
         public string AssetId { get; set; }
         public string AssetBrandId { get; set; }
         public string AssetModelId { get; set; }
