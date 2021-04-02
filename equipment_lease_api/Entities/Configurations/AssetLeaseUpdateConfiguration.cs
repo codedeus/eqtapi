@@ -17,20 +17,11 @@ namespace equipment_lease_api.Entities.Configurations
             builder.Property(e => e.AssetLeaseId).IsRequired(true).HasMaxLength(256).IsUnicode(false);
             builder.Property(e => e.DeletedById).HasMaxLength(256).IsUnicode(false);
 
-            builder.HasOne(e => e.LeaseInvoice)
-                .WithMany(e => e.AssetLeaseUpdates)
-                .OnDelete(DeleteBehavior.NoAction);
-
             builder
                 .HasOne(b => b.AssetLease)
                 .WithMany(a => a.AssetLeaseUpdates)
                 .IsRequired(false)
                 .OnDelete(DeleteBehavior.NoAction);
-
-            //builder
-            //    .HasOne(b => b.CreatedBy)
-            //    .WithMany(a => a.AssetLeaseUpdates)
-            //    .OnDelete(DeleteBehavior.NoAction);
         }
     }
 }

@@ -20,5 +20,6 @@ namespace equipment_lease_api.Entities
         public AppUser DeletedBy { get; set; }
         public ICollection<AssetLeaseEntry> AssetLeaseEntries { get; set; }
         public ICollection<AssetLeaseUpdate> AssetLeaseUpdates { get; set; }
+        public ICollection<LeaseInvoice> LeaseInvoices { get; set; }
     }
 }

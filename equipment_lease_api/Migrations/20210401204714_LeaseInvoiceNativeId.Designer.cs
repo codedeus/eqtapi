@@ -3,15 +3,17 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using equipment_lease_api.Entities;
 
 namespace equipment_lease_api.Migrations
 {
     [DbContext(typeof(AppDataContext))]
-    partial class AppDataContextModelSnapshot : ModelSnapshot
+    [Migration("20210401204714_LeaseInvoiceNativeId")]
+    partial class LeaseInvoiceNativeId
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -818,8 +820,8 @@ namespace equipment_lease_api.Migrations
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("bit");
 
-                    b.Property<string>("LeaseInvoiceId")
-                        .HasColumnType("varchar(256)");
+                    b.Property<int?>("LeaseInvoiceNativeId")
+                        .HasColumnType("int");
 
                     b.Property<DateTime>("UpdateDate")
                         .HasColumnType("datetime2");
@@ -830,7 +832,7 @@ namespace equipment_lease_api.Migrations
 
                     b.HasIndex("CreatedById");
 
-                    b.HasIndex("LeaseInvoiceId");
+                    b.HasIndex("LeaseInvoiceNativeId");
 
                     b.ToTable("AssetLeaseUpdates");
                 });
@@ -1135,10 +1137,10 @@ namespace equipment_lease_api.Migrations
                         .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
 
                     b.Property<string>("AssetLeaseId")
-                        .IsRequired()
-                        .HasColumnType("varchar(256)")
-                        .HasMaxLength(256)
-                        .IsUnicode(false);
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int?>("AssetLeaseNativeId")
+                        .HasColumnType("int");
 
                     b.Property<string>("CreatedById")
                         .IsRequired()
@@ -1190,7 +1192,9 @@ namespace equipment_lease_api.Migrations
 
                     b.HasKey("NativeId");
 
-                    b.HasIndex("AssetLeaseId");
+                    b.HasAlternateKey("Id");
+
+                    b.HasIndex("AssetLeaseNativeId");
 
                     b.HasIndex("CreatedById");
 
@@ -1688,11 +1692,9 @@ namespace equipment_lease_api.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("equipment_lease_api.Entities.LeaseInvoice", "LeaseInvoice")
+                    b.HasOne("equipment_lease_api.Entities.LeaseInvoice", null)
                         .WithMany("AssetLeaseUpdates")
-                        .HasForeignKey("LeaseInvoiceId")
-                        .HasPrincipalKey("Id")
-                        .OnDelete(DeleteBehavior.NoAction);
+                        .HasForeignKey("LeaseInvoiceNativeId");
                 });
 
             modelBuilder.Entity("equipment_lease_api.Entities.AssetLeaseUpdateEntry", b =>
@@ -1775,11 +1777,8 @@ namespace equipment_lease_api.Migrations
             modelBuilder.Entity("equipment_lease_api.Entities.LeaseInvoice", b =>
                 {
                     b.HasOne("equipment_lease_api.Entities.AssetLease", "AssetLease")
-                        .WithMany("LeaseInvoices")
-                        .HasForeignKey("AssetLeaseId")
-                        .HasPrincipalKey("Id")
-                        .OnDelete(DeleteBehavior.NoAction)
-                        .IsRequired();
+                        .WithMany()
+                        .HasForeignKey("AssetLeaseNativeId");
 
                     b.HasOne("equipment_lease_api.Entities.AppUser", "CreatedBy")
                         .WithMany()

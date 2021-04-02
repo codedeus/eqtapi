@@ -1,16 +1,10 @@
+
 using System;
 using System.Text;
 using System.Threading.Tasks;
-using equipment_lease_api.Auth;
-using equipment_lease_api.Entities;
-using equipment_lease_api.Helpers;
-using equipment_lease_api.Interfaces;
-using equipment_lease_api.Middleware;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.HttpOverrides;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -19,6 +13,16 @@ using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
+using equipment_lease_api.Auth;
+using equipment_lease_api.Entities;
+using equipment_lease_api.Helpers;
+using equipment_lease_api.Interfaces;
+using equipment_lease_api.Middleware;
+
+using Microsoft.AspNetCore.HttpOverrides;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.ResponseCompression;
+using System.IO.Compression;
 
 namespace equipment_lease_api
 {
@@ -36,6 +40,17 @@ namespace equipment_lease_api
         {
             //var connectionString = Configuration.GetConnectionString("BillingStoreInstance");
             //services.AddDbContext<AppDataContext>(options => options.UseSqlite("Data Source=EquipmentLeaseStore.db"));
+            services.Configure<GzipCompressionProviderOptions>(options =>
+            {
+                options.Level = CompressionLevel.Optimal;
+            });
+
+            services.AddResponseCompression(options =>
+            {
+                options.EnableForHttps = true;
+                options.Providers.Add<GzipCompressionProvider>();
+            });
+
             var connectionString = Configuration.GetConnectionString("AssetManagerConnection");
 
             services.AddDbContext<AppDataContext>(options => options.UseSqlServer(connectionString));
@@ -121,6 +136,14 @@ namespace equipment_lease_api
 
             services.AddCors(options => options.AddPolicy("CorsPolicy", builder => builder.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader()));
 
+
+            //services.AddControllers().AddNewtonsoftJson();
+            //JsonConvert.DefaultSettings = () => new JsonSerializerSettings
+            //{
+            //    DateTimeZoneHandling = DateTimeZoneHandling.Unspecified,
+            //    ReferenceLoopHandling = ReferenceLoopHandling.Ignore
+            //};
+
             services.AddControllers()
                 .AddNewtonsoftJson(options =>
                 {
@@ -175,6 +198,8 @@ namespace equipment_lease_api
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
         {
+            app.UseResponseCompression();
+
             if (env.IsDevelopment())
             {
                 app.UseDeveloperExceptionPage();

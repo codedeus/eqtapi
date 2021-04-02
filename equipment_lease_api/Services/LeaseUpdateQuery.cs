@@ -166,7 +166,7 @@ namespace equipment_lease_api.Services
                         CreatedById = loggedInUser,
                         UpdateDate = leaseUpdate.UpdateDate,
                         InvoiceRaised = false,
-                        LeaseInvoiceId = null
+                        //LeaseInvoiceId = null
                     };
 
                     foreach (var entry in leaseUpdate.Entries)
@@ -253,7 +253,7 @@ namespace equipment_lease_api.Services
                         CreatedById = loggedInUser,
                         UpdateDate = leaseUpdate.UpdateDate,
                         InvoiceRaised = false,
-                        LeaseInvoiceId = null
+                        //LeaseInvoiceId = null
                     };
 
                     foreach (var entry in leaseUpdate.Entries)

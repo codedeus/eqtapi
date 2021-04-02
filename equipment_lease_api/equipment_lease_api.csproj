@@ -22,6 +22,14 @@
     <Compile Remove="Migrations\20210313193206_MigrationChecker.Designer.cs" />
     <Compile Remove="Migrations\20210314143857_SomeRelationshipCleanup.cs" />
     <Compile Remove="Migrations\20210314143857_SomeRelationshipCleanup.Designer.cs" />
+    <Compile Remove="Migrations\20210401203517_LeaseInvoiceNativeId.cs" />
+    <Compile Remove="Migrations\20210401203517_LeaseInvoiceNativeId.Designer.cs" />
+    <Compile Remove="Migrations\20210401203936_LeaseInvoiceNativeId.cs" />
+    <Compile Remove="Migrations\20210401203936_LeaseInvoiceNativeId.Designer.cs" />
+    <Compile Remove="Migrations\20210401235812_AssetLeaseLeaseInvoiceLink.cs" />
+    <Compile Remove="Migrations\20210401235812_AssetLeaseLeaseInvoiceLink.Designer.cs" />
+    <Compile Remove="Migrations\20210401235945_AssetLeaseLeaseInvoiceLink.cs" />
+    <Compile Remove="Migrations\20210401235945_AssetLeaseLeaseInvoiceLink.Designer.cs" />
   </ItemGroup>
 
   <ItemGroup>
