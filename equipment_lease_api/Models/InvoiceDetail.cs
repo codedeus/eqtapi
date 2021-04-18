@@ -13,6 +13,7 @@ namespace equipment_lease_api.Models
         public string AssetLeaseId { get; internal set; }
         public string Project { get; internal set; }
         public string Location { get; internal set; }
+        public string Subsidiary { get; set; }
         public DateTime InvoiceDate { get; internal set; }
         public decimal TotalAmount => InvoiceEntries.Sum(s => s.Amount);
         public List<InvoiceEntry> InvoiceEntries { get; set; }

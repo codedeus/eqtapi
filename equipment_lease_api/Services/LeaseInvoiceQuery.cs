@@ -119,7 +119,8 @@ namespace equipment_lease_api.Services
                                   AssetLeaseId = invoice.AssetLeaseId,
                                   Project = invoice.AssetLease.Project.Name,
                                   Location = invoice.AssetLease.Project.Location.Name,
-                                  InvoiceDate = invoice.CreationDate
+                                  InvoiceDate = invoice.CreationDate,
+                                  Subsidiary = invoice.AssetLease.Project.Subsidiary.Name
                               }).FirstOrDefault();
 
                 var result = (from ntr in dbContext.AssetLeaseUpdateEntries

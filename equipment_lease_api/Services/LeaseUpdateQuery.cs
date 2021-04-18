@@ -78,7 +78,7 @@ namespace equipment_lease_api.Services
                 var today = DateTime.Now;
                 foreach(var entry in updateRequests)
                 {
-                    var affectedUpdateEntry = dbContext.AssetLeaseUpdateEntries.FirstOrDefault(ntr => ntr.Id == entry.Id && ntr.IsDeleted == false);
+                    var affectedUpdateEntry = dbContext.AssetLeaseUpdateEntries.Include(s=>s.AssetLeaseEntry).FirstOrDefault(ntr => ntr.Id == entry.Id && ntr.IsDeleted == false);
                     if (affectedUpdateEntry != null)
                     {
                         var affectedAssetItem = dbContext.AssetItems.FirstOrDefault(d => d.Id == affectedUpdateEntry.AssetLeaseEntry.AssetItemId);
